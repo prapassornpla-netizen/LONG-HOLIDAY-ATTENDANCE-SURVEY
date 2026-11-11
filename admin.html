@@ -33,18 +33,18 @@ const API='https://script.google.com/macros/s/AKfycbyXelj7oXGswqlznQoNESSukTQx2F
 const $=s=>document.querySelector(s);
 const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const D=[['2026-12-28','28 ธ.ค.','จ.'],['2026-12-29','29 ธ.ค.','อ.'],['2026-12-30','30 ธ.ค.','พ.'],['2026-12-31','31 ธ.ค.','พฤ.'],['2027-01-01','1 ม.ค.','ศ.'],['2027-01-02','2 ม.ค.','ส.'],['2027-01-03','3 ม.ค.','อา.']];
-const O={work:'มาทำงาน',annual:'ลาพักร้อน',personal:'ลากิจ',sick:'ลาป่วย',off:'หยุด'};
+const O={work:'มาทำงานปกติ',personal:'ลากิจ',annual:'ลาพักร้อน',unpaid:'ลาไม่รับค่าจ้าง',weekly:'หยุดประจำสัปดาห์',holiday:'หยุดประเพณี/ชดเชย'};
 const LB=D.map(x=>x[1]);
 async function api(b){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(b)});return r.json()}
 let roster=[],resp={},tab=0,fd='',qs='',unlocked=false;
-const nav=cur=>'<div>'+[['index.html','员工 · พนักงาน · ဝန်ထမ်း'],['admin.html','HR / Management']].map(([h,l])=>`<button class="${h===cur?'on':'g'}" onclick="location.href='${h}'">${l}</button>`).join('')+'</div>';
+const nav=cur=>'<div>'+[['index.html','員工 · พนักงาน · ဝန်ထမ်း'],['admin.html','HR / Management']].map(([h,l])=>`<button class="${h===cur?'on':'g'}" onclick="location.href='${h}'">${l}</button>`).join('')+'</div>';
 /* ---------- หน้าผู้บริหาร ---------- */
 let PW='',tm=null;try{PW=sessionStorage.getItem('pw')||''}catch(e){}
 async function load(){try{const j=await api({action:'admin',pw:PW});if(!j.ok)return false;roster=j.roster;resp={};j.responses.forEach(x=>resp[x.id]=x);return true}catch(e){return false}}
 async function admin(){
   if(PW&&await load()){unlocked=true;draw();if(!tm)tm=setInterval(async()=>{if(await load())draw()},60000);return}
-  $('#app').innerHTML=nav('admin.html')+'<div class="card" style="max-width:340px;margin:40px auto"><h2>🔒 HR / Management</h2><p>密码 · รหัสผ่าน · စကားဝှက်</p><input id="pw" type="password" placeholder="Password"> <button id="go">OK</button><p id="msg"></p></div>';
-  const go=async()=>{PW=$('#pw').value;$('#msg').textContent='...';if(await load()){try{sessionStorage.setItem('pw',PW)}catch(e){}admin()}else{PW='';$('#msg').textContent='密码错误 · รหัสไม่ถูกต้อง · စကားဝှက်မှားနေသည်'}};
+  $('#app').innerHTML=nav('admin.html')+'<div class="card" style="max-width:340px;margin:40px auto"><h2>🔒 HR / Management</h2><p>密碼 · รหัสผ่าน · စကားဝှက်</p><input id="pw" type="password" placeholder="Password"> <button id="go">OK</button><p id="msg"></p></div>';
+  const go=async()=>{PW=$('#pw').value;$('#msg').textContent='...';if(await load()){try{sessionStorage.setItem('pw',PW)}catch(e){}admin()}else{PW='';$('#msg').textContent='密碼錯誤 · รหัสไม่ถูกต้อง · စကားဝှက်မှားနေသည်'}};
   $('#go').onclick=go;$('#pw').onkeydown=e=>{if(e.key==='Enter')go()};
 }
 const sum=rows=>['รวม',...(rows[0]?rows[0].slice(1).map((_,i)=>rows.reduce((a,r)=>a+r[i+1],0)):[])];
@@ -58,7 +58,7 @@ function tables(){
     rows.push(sum(rows));return {h:[t,'พนักงาน','ตอบแล้ว',...LB.map(x=>x+' (มา)')],r:rows}};
   const wk={h:['รหัส','ชื่อ','แผนก','ประเภท','กะ',...LB,'รวมวันทำงาน'],
     r:R.filter(r=>D.some(([d])=>S(r,d)==='work')).map(r=>[r.id,r.name,r.dept,r.type,r.shift,...D.map(([d])=>S(r,d)==='work'?'✓':''),D.filter(([d])=>S(r,d)==='work').length])};
-  const lk=['annual','personal','sick','off'];
+  const lk=['personal','annual','unpaid','weekly','holiday'];
   const lv={h:['ประเภทการลา',...LB,'รวม (คน-วัน)'],r:lk.map(k=>{const v=D.map(([d])=>R.filter(r=>S(r,d)===k).length);return [O[k],...v,v.reduce((a,b)=>a+b,0)]})};lv.r.push(sum(lv.r));
   const ld={h:['แผนก',...lk.map(k=>O[k]),'รวม'],r:[...new Set(R.map(r=>r.dept))].sort().map(p=>{const g=R.filter(r=>r.dept===p);const v=lk.map(k=>g.reduce((a,r)=>a+D.filter(([d])=>S(r,d)===k).length,0));return [p,...v,v.reduce((a,b)=>a+b,0)]})};ld.r.push(sum(ld.r));
   const pd={h:['รหัส','ชื่อ','แผนก','ประเภท','กะ'],r:R.filter(r=>!resp[r.id]).map(r=>[r.id,r.name,r.dept,r.type,r.shift])};
@@ -81,9 +81,9 @@ function draw(){
   const pc=T.R.length?Math.round(T.ans.length/T.R.length*100):0;
   let body;
   if(tab<T.list.length)body=T.list[tab][1].map(([t,x])=>`<h2>${E(t)}${t==='Not Responded'?' ('+x.r.length+' คน)':''}</h2>${tbl(x)}`).join('');
-  $('#app').innerHTML=nav('admin.html')+`<div class="hd"><h1>🌸 ภาพรวมการเข้างานช่วงสิ้นปี · 年底出勤总览</h1><p>ข้อมูลอัปเดตแบบเรียลไทม์ · 实时更新 · အချိန်နှင့်တစ်ပြေးညီ</p></div>
+  $('#app').innerHTML=nav('admin.html')+`<div class="hd"><h1>🌸 ภาพรวมการเข้างานช่วงสิ้นปี · 年底出勤總覽</h1><p>ข้อมูลอัปเดตแบบเรียลไทม์ · 實時更新 · အချိန်နှင့်တစ်ပြေးညီ</p></div>
   <div class="kp"><div><b>${T.R.length}</b>พนักงาน</div><div><b>${T.ans.length}</b>ตอบแล้ว</div><div><b>${T.pd.r.length}</b>ยังไม่ตอบ</div><div><b>${pc}%</b>ตอบแล้ว</div></div>
-  <div class="card"><select id="fd"><option value="">ทุกแผนก / 所有部门 / ဌာနအားလုံး</option>${depts.map(d=>`<option${d===fd?' selected':''}>${E(d)}</option>`).join('')}</select> <input id="qs" placeholder="ค้นหา / 查詢 / ရှာဖွေရန်" value="${E(qs)}"> <button id="ex">⬇ Excel</button> <button id="rf" class="g">↻</button></div>
+  <div class="card"><select id="fd"><option value="">ทุกแผนก / 所有部門 / ဌာနအားလုံး</option>${depts.map(d=>`<option${d===fd?' selected':''}>${E(d)}</option>`).join('')}</select> <input id="qs" placeholder="ค้นหา / 查詢 / ရှာဖွေရန်" value="${E(qs)}"> <button id="ex">⬇ Excel</button> <button id="rf" class="g">↻</button></div>
   <div>${names.map((n,i)=>`<button class="${i===tab?'on':'g'}" data-t="${i}">${E(n)}</button>`).join('')}</div>${body}`;
   $('#fd').onchange=e=>{fd=e.target.value;draw()};
   $('#ex').onclick=exp;$('#rf').onclick=async()=>{if(await load())draw()};$('#qs').onchange=e=>{qs=e.target.value.trim();draw()};
