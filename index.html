@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แบบสำรวจการเข้างานช่วงสิ้นปี · UNITECH PCB</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#fff3f7;--card:#fff;--ink:#4a2a35;--mut:#8a6a76;--pk:#f7b6cc;--pk2:#e0709a;--soft:#fde3ec;--line:#f3cfdb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2a1a20;--card:#3a2630;--ink:#fbe9f0;--mut:#d3aab9;--pk:#b8587d;--pk2:#f08cb0;--soft:#4a2f3b;--line:#5a3a48}}
+:root[data-theme="dark"]{--bg:#2a1a20;--card:#3a2630;--ink:#fbe9f0;--mut:#d3aab9;--pk:#b8587d;--pk2:#f08cb0;--soft:#4a2f3b;--line:#5a3a48}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Sarabun","Noto Sans Thai",system-ui,sans-serif}
+#app{max-width:1100px;margin:0 auto;padding:14px}
+h1{font-size:21px;margin:4px 0}h2{font-size:17px;margin:10px 0 6px}
+.hd{background:linear-gradient(135deg,var(--pk),var(--soft));border-radius:16px;padding:16px;margin-bottom:12px}
+.hd p{margin:0;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+input,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--pk);border-radius:10px;padding:9px 11px;max-width:100%}
+button{font:inherit;background:var(--pk2);color:#fff;border:0;border-radius:10px;padding:9px 16px;cursor:pointer;margin:4px 4px 4px 0}
+button.g{background:var(--soft);color:var(--ink);border:1px solid var(--pk)}
+button.on{background:var(--pk2);color:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.kp div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.kp b{display:block;font-size:22px;color:var(--pk2)}
+.sc{overflow-x:auto;margin-bottom:12px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:center;white-space:nowrap}
+th{background:var(--soft)}td:first-child{text-align:left}
+tr:last-child td{font-weight:600}
+</style></head><body><div id="app"></div>
+<script>
+const API='https://script.google.com/macros/s/AKfycbyXelj7oXGswqlznQoNESSukTQx2F9Hit9wb894pxy1aSUKlu-W58LJzqDxNt8ERUspaw/exec';
+const $=s=>document.querySelector(s);
+const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const D=[['2026-12-28','28 ธ.ค.','จ.'],['2026-12-29','29 ธ.ค.','อ.'],['2026-12-30','30 ธ.ค.','พ.'],['2026-12-31','31 ธ.ค.','พฤ.'],['2027-01-01','1 ม.ค.','ศ.'],['2027-01-02','2 ม.ค.','ส.'],['2027-01-03','3 ม.ค.','อา.']];
+const O={work:'มาทำงาน',annual:'ลาพักร้อน',personal:'ลากิจ',sick:'ลาป่วย',off:'หยุด'};
+const LB=D.map(x=>x[1]);
+async function api(b){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(b)});return r.json()}
+const nav=cur=>'<div>'+[['index.html','员工 · พนักงาน · ဝန်ထမ်း'],['admin.html','HR / Management']].map(([h,l])=>`<button class="${h===cur?'on':'g'}" onclick="location.href='${h}'">${l}</button>`).join('')+'</div>';
+/* ---------- แบบสำรวจ ---------- */
+const X=(zh,th,my)=>zh+'<br>'+th+'<br>'+my;
+const O3={work:['上班','มาทำงาน','အလုပ်လာမည်'],annual:['年假','ลาพักร้อน','နှစ်ပတ်လည်ခွင့်'],personal:['事假','ลากิจ','ကိစ္စရှိခွင့်'],sick:['病假','ลาป่วย','ဆေးခွင့်'],off:['休息/假日','หยุด','ရက်ပိတ်']};
+const M=h=>{const m=$('#msg');if(m)m.innerHTML=h};
+function survey(){
+  const n=Date.now(),open=(n>=Date.parse('2026-11-11T00:00:00+07:00')&&n<=Date.parse('2026-11-19T23:59:59+07:00'))||location.hash==='#test';
+  let box;
+  if(!open)box='<h2>'+X('问卷尚未开放或已截止','ยังไม่เปิดหรือปิดรับแล้ว','စစ်တမ်း မဖွင့်သေးပါ သို့မဟုတ် ပိတ်ပြီးပါပြီ')+'</h2>';
+  else box='<p>'+X('请输入员工编号','กรอกรหัสพนักงาน','ဝန်ထမ်းကုဒ် ထည့်ပါ')+'</p><input id="eid" placeholder="ID" autocomplete="off"> <button id="nx">→</button><p id="msg"></p>';
+  $('#app').innerHTML=nav('index.html')+`<div class="hd"><h1>🌸 年底出勤与请假意愿调查</h1><p>แบบสำรวจการเข้างานและความประสงค์ในการลาหยุดช่วงสิ้นปี</p><p>နှစ်ကုန် အလုပ်ဆင်းခြင်းနှင့် ခွင့်ယူလိုခြင်း စစ်တမ်း</p><p>📅 12/28 (一/จ./တနင်္လာ) – 1/3 (日/อา./တနင်္ဂနွေ)</p></div>
+  <div class="card"><p>各位伙伴辛苦了！年底将至，感谢大家全年的付出。为了让大家提前规划假期，并顺利进行工厂年度盘点，公司想了解12月28日至1月3日期间的出勤意愿。本调查完全出于自愿，请按真实想法填写，不会影响任何考核。12月31日及1月1日为传统节假日，公司尊重每位员工的决定；若自愿到岗参与年度盘点，将依法支付加班费。完成问卷即可参加免费饮料抽奖 🥤</p>
+  <p>ทุกคนทำงานกันอย่างเหน็ดเหนื่อยแล้ว! ขอบคุณสำหรับความทุ่มเทตลอดปี เพื่อให้ทุกคนวางแผนวันหยุดได้ล่วงหน้าและการตรวจนับสินค้าคงคลังประจำปีราบรื่น บริษัทขอสำรวจความประสงค์ในการมาทำงานช่วง 28 ธ.ค. – 3 ม.ค. เป็นการสำรวจตามความสมัครใจ ไม่มีผลต่อการประเมินใด ๆ วันที่ 31 ธ.ค. และ 1 ม.ค. เป็นวันหยุดตามประเพณี บริษัทเคารพการตัดสินใจของทุกคน หากสมัครใจมาตรวจนับสินค้า โรงงานจ่ายค่าล่วงเวลาตามกฎหมาย ตอบครบลุ้นรับเครื่องดื่มฟรี 🥤</p>
+  <p>ဝန်ထမ်းအားလုံး တစ်နှစ်လုံး ပင်ပန်းကြိုးစားခဲ့ကြသည့်အတွက် ကျေးဇူးတင်ပါသည်။ အားလပ်ရက်ကို ကြိုတင်စီစဉ်နိုင်ရန်နှင့် နှစ်ကုန်ပစ္စည်းစာရင်းစစ်ဆေးမှု ချောမွေ့စေရန် ဒီဇင်ဘာ ၂၈ မှ ဇန်နဝါရီ ၃ အထိ လာရောက်လုပ်ကိုင်လိုမှု ကို မေးမြန်းခြင်း ဖြစ်ပါသည်။ ဤစစ်တမ်းသည် ဆန္ဒအလျောက်သာ ဖြစ်ပြီး ဆုံးဖြတ်ချက်ကို ကျွန်ုပ်တို့ လေးစားပါသည်။ ဒီဇင်ဘာ ၃၁ နှင့် ဇန်နဝါရီ ၁ တို့သည် ရိုးရာအားလပ်ရက်များ ဖြစ်ပါသည်။ ဆန္ဒအလျောက် စာရင်းစစ်ရန် လာပါက ဥပဒေအရ အချိန်ပိုကြေး ပေးပါမည်။ ဖြေဆိုသူများသည် အခမဲ့ အဖျော်ယမကာ ကံစမ်းမဲတွင် ပါဝင်ခွင့်ရှိသည် 🥤</p>
+  </div><div class="card" id="box">${box}</div>`;
+  if($('#nx')){$('#nx').onclick=look;$('#eid').onkeydown=e=>{if(e.key==='Enter')look()}}
+}
+async function look(){
+  const id=$('#eid').value.trim().toUpperCase().replace(/\//g,'');if(!id)return;
+  M('...');
+  try{
+    const j=await api({action:'lookup',id});const r=j.ok&&j.emp;
+    if(!r){M(X('找不到该员工编号，请重新确认','ไม่พบรหัสพนักงานนี้ กรุณาตรวจสอบอีกครั้ง','ဝန်ထမ်းကုဒ် မတွေ့ပါ၊ ပြန်စစ်ပါ'));return}
+    const old=j.days||{};
+    form(r,old);
+  }catch(e){M(X('出错了，请重试','เกิดข้อผิดพลาด กรุณาลองใหม่','အမှားဖြစ်ပါသည်၊ ပြန်ကြိုးစားပါ'))}
+}
+function form(r,old){
+  $('#box').innerHTML=`<p><b>${E(r.name)}</b> · ${E(r.id)} · ${E(r.dept)}</p>`+
+  D.map(([d,l,w],i)=>`<div class="row"><span>${l} (${w})${i==3||i==4?'<br>传统节假日 · วันหยุดตามประเพณี · ရိုးရာအားလပ်ရက်':''}</span><select data-d="${d}"><option value="">--</option>${Object.entries(O3).map(([k,v])=>`<option value="${k}"${old[d]==k?' selected':''}>${v.join(' / ')}</option>`).join('')}</select></div>`).join('')+
+  '<button id="sv">保存 · บันทึก · သိမ်းမည်</button><p id="msg"></p>';
+  $('#sv').onclick=async()=>{
+    const days={};let ok=1;
+    document.querySelectorAll('select[data-d]').forEach(s=>{if(!s.value)ok=0;days[s.dataset.d]=s.value});
+    if(!ok){M(X('请选择每一天','กรุณาเลือกให้ครบทุกวัน','နေ့တိုင်းကို ရွေးချယ်ပါ'));return}
+    try{const j=await api({action:'save',id:r.id,days});if(!j.ok)throw 0;
+      $('#box').innerHTML='<h2>✅ '+X('已保存，谢谢！','บันทึกเรียบร้อย ขอบคุณค่ะ','သိမ်းဆည်းပြီးပါပြီ၊ ကျေးဇူးတင်ပါသည်')+'</h2><p>'+X('截止前可重新输入编号修改','แก้ไขได้จนกว่าจะปิดรับ โดยกรอกรหัสใหม่','ပိတ်ချိန်မတိုင်မီ ကုဒ်ပြန်ထည့်၍ ပြင်နိုင်ပါသည်')+'</p>'}
+    catch(e){M(X('保存失败，请重试','บันทึกไม่สำเร็จ กรุณาลองใหม่','သိမ်းမရပါ၊ ပြန်ကြိုးစားပါ'))}
+  };
+}
+
+
+survey();
+</script></body></html>

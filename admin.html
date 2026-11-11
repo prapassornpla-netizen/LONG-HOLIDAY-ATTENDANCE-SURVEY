@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HR / Management · UNITECH PCB</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#fff3f7;--card:#fff;--ink:#4a2a35;--mut:#8a6a76;--pk:#f7b6cc;--pk2:#e0709a;--soft:#fde3ec;--line:#f3cfdb}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2a1a20;--card:#3a2630;--ink:#fbe9f0;--mut:#d3aab9;--pk:#b8587d;--pk2:#f08cb0;--soft:#4a2f3b;--line:#5a3a48}}
+:root[data-theme="dark"]{--bg:#2a1a20;--card:#3a2630;--ink:#fbe9f0;--mut:#d3aab9;--pk:#b8587d;--pk2:#f08cb0;--soft:#4a2f3b;--line:#5a3a48}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Sarabun","Noto Sans Thai",system-ui,sans-serif}
+#app{max-width:1100px;margin:0 auto;padding:14px}
+h1{font-size:21px;margin:4px 0}h2{font-size:17px;margin:10px 0 6px}
+.hd{background:linear-gradient(135deg,var(--pk),var(--soft));border-radius:16px;padding:16px;margin-bottom:12px}
+.hd p{margin:0;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+input,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--pk);border-radius:10px;padding:9px 11px;max-width:100%}
+button{font:inherit;background:var(--pk2);color:#fff;border:0;border-radius:10px;padding:9px 16px;cursor:pointer;margin:4px 4px 4px 0}
+button.g{background:var(--soft);color:var(--ink);border:1px solid var(--pk)}
+button.on{background:var(--pk2);color:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.kp div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.kp b{display:block;font-size:22px;color:var(--pk2)}
+.sc{overflow-x:auto;margin-bottom:12px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:center;white-space:nowrap}
+th{background:var(--soft)}td:first-child{text-align:left}
+tr:last-child td{font-weight:600}
+</style></head><body><div id="app"></div>
+<script>
+const API='https://script.google.com/macros/s/AKfycbyXelj7oXGswqlznQoNESSukTQx2F9Hit9wb894pxy1aSUKlu-W58LJzqDxNt8ERUspaw/exec';
+const $=s=>document.querySelector(s);
+const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const D=[['2026-12-28','28 ธ.ค.','จ.'],['2026-12-29','29 ธ.ค.','อ.'],['2026-12-30','30 ธ.ค.','พ.'],['2026-12-31','31 ธ.ค.','พฤ.'],['2027-01-01','1 ม.ค.','ศ.'],['2027-01-02','2 ม.ค.','ส.'],['2027-01-03','3 ม.ค.','อา.']];
+const O={work:'มาทำงาน',annual:'ลาพักร้อน',personal:'ลากิจ',sick:'ลาป่วย',off:'หยุด'};
+const LB=D.map(x=>x[1]);
+async function api(b){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(b)});return r.json()}
+let roster=[],resp={},tab=0,fd='',qs='',unlocked=false;
+const nav=cur=>'<div>'+[['index.html','员工 · พนักงาน · ဝန်ထမ်း'],['admin.html','HR / Management']].map(([h,l])=>`<button class="${h===cur?'on':'g'}" onclick="location.href='${h}'">${l}</button>`).join('')+'</div>';
+/* ---------- หน้าผู้บริหาร ---------- */
+let PW='',tm=null;try{PW=sessionStorage.getItem('pw')||''}catch(e){}
+async function load(){try{const j=await api({action:'admin',pw:PW});if(!j.ok)return false;roster=j.roster;resp={};j.responses.forEach(x=>resp[x.id]=x);return true}catch(e){return false}}
+async function admin(){
+  if(PW&&await load()){unlocked=true;draw();if(!tm)tm=setInterval(async()=>{if(await load())draw()},60000);return}
+  $('#app').innerHTML=nav('admin.html')+'<div class="card" style="max-width:340px;margin:40px auto"><h2>🔒 HR / Management</h2><p>密码 · รหัสผ่าน · စကားဝှက်</p><input id="pw" type="password" placeholder="Password"> <button id="go">OK</button><p id="msg"></p></div>';
+  const go=async()=>{PW=$('#pw').value;$('#msg').textContent='...';if(await load()){try{sessionStorage.setItem('pw',PW)}catch(e){}admin()}else{PW='';$('#msg').textContent='密码错误 · รหัสไม่ถูกต้อง · စကားဝှက်မှားနေသည်'}};
+  $('#go').onclick=go;$('#pw').onkeydown=e=>{if(e.key==='Enter')go()};
+}
+const sum=rows=>['รวม',...(rows[0]?rows[0].slice(1).map((_,i)=>rows.reduce((a,r)=>a+r[i+1],0)):[])];
+function tables(){
+  const R=roster.filter(r=>(!fd||r.dept===fd)&&(!qs||(r.id+' '+r.name).toLowerCase().includes(qs.toLowerCase()))),S=(r,d)=>(resp[r.id]&&resp[r.id].days&&resp[r.id].days[d])||'';
+  const ans=R.filter(r=>resp[r.id]),ks=Object.keys(O);
+  const daily={h:['วันที่','พนักงานทั้งหมด','ตอบแล้ว',...Object.values(O),'% มาทำงาน (จากผู้ตอบ)'],
+    r:D.map(([d,l])=>{const c=k=>R.filter(r=>S(r,d)===k).length;return [l,R.length,ans.length,...ks.map(c),ans.length?Math.round(c('work')/ans.length*100)+'%':'-']})};
+  const pv=(f,t)=>{const keys=[...new Set(R.map(f))].sort();
+    const rows=keys.map(k=>{const g=R.filter(r=>f(r)===k);return [k,g.length,g.filter(r=>resp[r.id]).length,...D.map(([d])=>g.filter(r=>S(r,d)==='work').length)]});
+    rows.push(sum(rows));return {h:[t,'พนักงาน','ตอบแล้ว',...LB.map(x=>x+' (มา)')],r:rows}};
+  const wk={h:['รหัส','ชื่อ','แผนก','ประเภท','กะ',...LB,'รวมวันทำงาน'],
+    r:R.filter(r=>D.some(([d])=>S(r,d)==='work')).map(r=>[r.id,r.name,r.dept,r.type,r.shift,...D.map(([d])=>S(r,d)==='work'?'✓':''),D.filter(([d])=>S(r,d)==='work').length])};
+  const lk=['annual','personal','sick','off'];
+  const lv={h:['ประเภทการลา',...LB,'รวม (คน-วัน)'],r:lk.map(k=>{const v=D.map(([d])=>R.filter(r=>S(r,d)===k).length);return [O[k],...v,v.reduce((a,b)=>a+b,0)]})};lv.r.push(sum(lv.r));
+  const ld={h:['แผนก',...lk.map(k=>O[k]),'รวม'],r:[...new Set(R.map(r=>r.dept))].sort().map(p=>{const g=R.filter(r=>r.dept===p);const v=lk.map(k=>g.reduce((a,r)=>a+D.filter(([d])=>S(r,d)===k).length,0));return [p,...v,v.reduce((a,b)=>a+b,0)]})};ld.r.push(sum(ld.r));
+  const pd={h:['รหัส','ชื่อ','แผนก','ประเภท','กะ'],r:R.filter(r=>!resp[r.id]).map(r=>[r.id,r.name,r.dept,r.type,r.shift])};
+  const all={h:['รหัส','ชื่อ','แผนก','ประเภท','กะ',...LB,'เวลาบันทึก'],r:ans.map(r=>[r.id,r.name,r.dept,r.type,r.shift,...D.map(([d])=>O[S(r,d)]||''),new Date(resp[r.id].ts||0).toLocaleString('th-TH')])};
+  return {R,ans,pd,all,list:[
+    ['สรุปรายวัน',[['Daily Workforce Summary',daily]]],
+    ['กะ',[['Shift',pv(r=>r.shift,'กะ')],['Shift Detail',pv(r=>r.team||r.shift,'กลุ่มกะ')]]],
+    ['DL / IDL',[['DL / IDL',pv(r=>r.type,'ประเภท')]]],
+    ['ประเภท × กะ',[['Type × Shift',pv(r=>r.type+' × '+r.shift,'ประเภท × กะ')]]],
+    ['แผนก',[['Department',pv(r=>r.dept,'แผนก')]]],
+    ['Working Breakdown',[['Working Breakdown',wk]]],
+    ['Leave Type',[['Leave Type Breakdown',lv],['Leave × Department',ld]]],
+    ['ยังไม่ได้ทำ',[['Not Responded',pd]]]]};
+}
+const tbl=x=>`<div class="sc"><table><tr>${x.h.map(h=>`<th>${E(h)}</th>`).join('')}</tr>${x.r.map(r=>`<tr>${r.map(c=>`<td>${E(c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${x.h.length}">ไม่มีข้อมูล</td></tr>`}</table></div>`;
+function draw(){
+  if(!unlocked)return;
+  const T=tables(),depts=[...new Set(roster.map(r=>r.dept))].sort(),names=T.list.map(x=>x[0]);
+  if(tab>=names.length)tab=0;
+  const pc=T.R.length?Math.round(T.ans.length/T.R.length*100):0;
+  let body;
+  if(tab<T.list.length)body=T.list[tab][1].map(([t,x])=>`<h2>${E(t)}${t==='Not Responded'?' ('+x.r.length+' คน)':''}</h2>${tbl(x)}`).join('');
+  $('#app').innerHTML=nav('admin.html')+`<div class="hd"><h1>🌸 ภาพรวมการเข้างานช่วงสิ้นปี · 年底出勤总览</h1><p>ข้อมูลอัปเดตแบบเรียลไทม์ · 实时更新 · အချိန်နှင့်တစ်ပြေးညီ</p></div>
+  <div class="kp"><div><b>${T.R.length}</b>พนักงาน</div><div><b>${T.ans.length}</b>ตอบแล้ว</div><div><b>${T.pd.r.length}</b>ยังไม่ตอบ</div><div><b>${pc}%</b>ตอบแล้ว</div></div>
+  <div class="card"><select id="fd"><option value="">ทุกแผนก / 所有部门 / ဌာနအားလုံး</option>${depts.map(d=>`<option${d===fd?' selected':''}>${E(d)}</option>`).join('')}</select> <input id="qs" placeholder="ค้นหา / 查詢 / ရှာဖွေရန်" value="${E(qs)}"> <button id="ex">⬇ Excel</button> <button id="rf" class="g">↻</button></div>
+  <div>${names.map((n,i)=>`<button class="${i===tab?'on':'g'}" data-t="${i}">${E(n)}</button>`).join('')}</div>${body}`;
+  $('#fd').onchange=e=>{fd=e.target.value;draw()};
+  $('#ex').onclick=exp;$('#rf').onclick=async()=>{if(await load())draw()};$('#qs').onchange=e=>{qs=e.target.value.trim();draw()};
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=+b.dataset.t;draw()});
+}
+async function exp(){
+  try{
+    const T=tables(),wb=XLSX.utils.book_new(),add=(n,a)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(a),n.replace(/[\\\/?*\[\]:]/g,'-').slice(0,31));
+    T.list.forEach(([_,ts])=>{const a=[];ts.forEach(([t,x],i)=>{if(i)a.push([]);if(ts.length>1)a.push([t]);a.push(x.h,...x.r)});add(ts[0][0],a)});
+    add('All Responses',[T.all.h,...T.all.r]);
+    XLSX.writeFile(wb,'year-end-survey.xlsx');
+  }catch(e){}
+}
+
+admin();
+</script></body></html>
